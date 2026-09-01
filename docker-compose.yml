@@ -1,0 +1,2 @@
+# Docker Compose se configurará en una etapa posterior.
+services: {}
