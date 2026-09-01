@@ -1,2 +1,22 @@
-# Docker Compose se configurará en una etapa posterior.
-services: {}
+services:
+  go-api:
+    build:
+      context: ./go-api
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_API_URL: http://node-api:3002
+    networks:
+      - interseguro
+
+  node-api:
+    build:
+      context: ./node-api
+    ports:
+      - "3002:3002"
+    networks:
+      - interseguro
+
+networks:
+  interseguro:
+    driver: bridge
