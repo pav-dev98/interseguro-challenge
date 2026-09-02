@@ -126,44 +126,69 @@ export default function Home() {
   };
 
   const isLoading = requestState === "loading";
+  const runtimeStatus = requestState === "loading" ? "CALCULANDO" : requestState === "success" ? "COMPLETADO" : requestState === "error" ? "ERROR" : "LISTO";
 
   return (
-    <main className="page-shell">
-      <header className="page-header">
-        <p className="eyebrow">Interseguro Coding Challenge</p>
-        <h1>Factorización QR</h1>
-        <p className="intro">Ingresa una matriz rectangular para calcular su factorización QR y las estadísticas de las matrices resultantes.</p>
-      </header>
+    <main className="application-shell">
+      <aside className="sidebar" aria-label="Navegación principal">
+        <div className="brand"><span aria-hidden="true" className="brand-mark">⌁</span><span>QR_SOLVER</span></div>
+        <nav className="sidebar-nav">
+          <p>Compute</p>
+          <span className="nav-item nav-item-active"><span aria-hidden="true">Σ</span>Solver</span>
+          <span className="nav-item nav-item-muted"><span aria-hidden="true">▤</span>Theory</span>
+          <p>Resources</p>
+          <span className="nav-item nav-item-muted"><span aria-hidden="true">◷</span>History</span>
+          <span className="nav-item nav-item-muted"><span aria-hidden="true">›_</span>API Docs</span>
+        </nav>
+      </aside>
 
-      <section className="workspace">
-        <MatrixInput
-          disabled={isLoading}
-          matrix={matrix}
-          onAddColumn={addColumn}
-          onAddRow={addRow}
-          onCellChange={updateCell}
-          onRemoveColumn={removeColumn}
-          onRemoveRow={removeRow}
-        />
-        <button className="submit-button" disabled={isLoading} onClick={calculateQR} type="button">
-          {isLoading ? "Calculando..." : "Calcular QR"}
-        </button>
-        {requestState === "error" && error ? <p className="error-message" role="alert">{error}</p> : null}
-      </section>
+      <div className="application-content">
+        <header className="topbar">
+          <div className="topbar-status"><span className={`status-chip status-${requestState}`}>{runtimeStatus}</span><span className="topbar-divider" /><span>QR_SOLVER</span></div>
+          <div className="topbar-tools" aria-label="Herramientas visuales"><span aria-hidden="true">⌕</span><span aria-hidden="true">⚙</span><span aria-hidden="true" className="user-glyph">◉</span></div>
+        </header>
 
-      {requestState === "success" && result ? (
-        <section className="results" aria-labelledby="results-title">
-          <div className="results-heading">
-            <p className="eyebrow">Resultado</p>
-            <h2 id="results-title">Factorización y estadísticas</h2>
-          </div>
-          <div className="matrices-grid">
-            <MatrixTable formatNumber={formatNumber} matrix={result.q} title="Matriz Q" />
-            <MatrixTable formatNumber={formatNumber} matrix={result.r} title="Matriz R" />
-          </div>
-          <Statistics formatNumber={formatNumber} statistics={result.statistics} />
-        </section>
-      ) : null}
+        <div className="dashboard">
+          <section className="workspace input-blade">
+            <MatrixInput
+              disabled={isLoading}
+              matrix={matrix}
+              onAddColumn={addColumn}
+              onAddRow={addRow}
+              onCellChange={updateCell}
+              onRemoveColumn={removeColumn}
+              onRemoveRow={removeRow}
+            />
+            <button className="submit-button" disabled={isLoading} onClick={calculateQR} type="button">
+              <span>{isLoading ? "Calculando..." : "Ejecutar factorización"}</span><span aria-hidden="true">→</span>
+            </button>
+            {requestState === "error" && error ? <p className="error-message" role="alert">{error}</p> : null}
+          </section>
+
+          {requestState === "success" && result ? (
+            <section className="results result-blade" aria-labelledby="results-title">
+              <div className="results-heading">
+                <h2 id="results-title">Resultado de transformación</h2>
+                <p>Descomposición A = QR mediante Modified Gram-Schmidt</p>
+              </div>
+              <div className="matrices-grid">
+                <MatrixTable formatNumber={formatNumber} matrix={result.q} title="Matriz Q" />
+                <MatrixTable formatNumber={formatNumber} matrix={result.r} title="Matriz R" />
+              </div>
+              <Statistics formatNumber={formatNumber} statistics={result.statistics} />
+            </section>
+          ) : (
+            <section className="results result-blade empty-results" aria-labelledby="results-title">
+              <div className="results-heading">
+                <h2 id="results-title">Resultado de transformación</h2>
+                <p>Descomposición A = QR mediante Modified Gram-Schmidt</p>
+              </div>
+              <div className="empty-state"><span aria-hidden="true">∎</span><p>Ejecuta la factorización para visualizar las matrices Q, R y sus estadísticas.</p></div>
+            </section>
+          )}
+        </div>
+        <footer className="statusbar"><div><span className="engine-dot" />ENGINE: READY <span className="statusbar-divider" /> PRECISION: FLOAT64</div><span>UTF-8</span></footer>
+      </div>
     </main>
   );
 }

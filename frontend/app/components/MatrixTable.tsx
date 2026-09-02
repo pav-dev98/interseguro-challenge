@@ -5,9 +5,11 @@ type MatrixTableProps = {
 };
 
 export function MatrixTable({ matrix, title, formatNumber }: MatrixTableProps) {
+  const kind = title === "Matriz Q" ? "q" : "r";
+
   return (
-    <section aria-labelledby={`${title.toLowerCase()}-title`} className="result-panel">
-      <h3 id={`${title.toLowerCase()}-title`}>{title}</h3>
+    <section aria-labelledby={`${kind}-matrix-title`} className={`result-panel result-panel-${kind}`}>
+      <h3 id={`${kind}-matrix-title`}><span className="matrix-indicator" />{title}{kind === "q" ? " (Ortogonal)" : " (Triangular sup.)"}</h3>
       <div className="matrix-scroll">
         <table className="result-matrix">
           <tbody>

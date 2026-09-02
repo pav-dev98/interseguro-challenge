@@ -18,19 +18,31 @@ export function MatrixInput({
   disabled
 }: MatrixInputProps) {
   return (
-    <section aria-labelledby="matrix-input-title" className="matrix-section">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Matriz de entrada</p>
-          <h2 id="matrix-input-title">Ingresa los valores</h2>
+    <section aria-labelledby="matrix-input-title" className="matrix-section input-section">
+      <div className="matrix-heading">
+        <h2 id="matrix-input-title">Matriz de entrada</h2>
+        <div className="dimension-controls" aria-label="Dimensiones de la matriz">
+          <div className="dimension-control">
+            <span>Filas</span>
+            <div className="dimension-stepper">
+              <button aria-label="Eliminar fila" disabled={disabled || matrix.length === 1} onClick={onRemoveRow} type="button">−</button>
+              <strong>{matrix.length}</strong>
+              <button aria-label="Agregar fila" disabled={disabled} onClick={onAddRow} type="button">+</button>
+            </div>
+          </div>
+          <div className="dimension-control">
+            <span>Columnas</span>
+            <div className="dimension-stepper">
+              <button aria-label="Eliminar columna" disabled={disabled || matrix[0].length === 1} onClick={onRemoveColumn} type="button">−</button>
+              <strong>{matrix[0].length}</strong>
+              <button aria-label="Agregar columna" disabled={disabled} onClick={onAddColumn} type="button">+</button>
+            </div>
+          </div>
         </div>
-        <span className="matrix-size">
-          {matrix.length} × {matrix[0].length}
-        </span>
       </div>
 
-      <div className="matrix-scroll">
-        <div className="matrix-editor" role="grid" aria-label="Matriz editable">
+      <div className="matrix-scroll input-matrix-scroll">
+        <div className="matrix-editor" role="grid" aria-label="Matriz editable" style={{ gridTemplateColumns: `repeat(${matrix[0].length}, minmax(76px, 1fr))` }}>
           {matrix.map((row, rowIndex) => (
             <div className="matrix-row" role="row" key={`row-${rowIndex}`}>
               {row.map((value, columnIndex) => (
@@ -51,20 +63,6 @@ export function MatrixInput({
         </div>
       </div>
 
-      <div className="matrix-actions" aria-label="Controles de matriz">
-        <button disabled={disabled} onClick={onAddRow} type="button">
-          + Fila
-        </button>
-        <button disabled={disabled || matrix.length === 1} onClick={onRemoveRow} type="button">
-          − Fila
-        </button>
-        <button disabled={disabled} onClick={onAddColumn} type="button">
-          + Columna
-        </button>
-        <button disabled={disabled || matrix[0].length === 1} onClick={onRemoveColumn} type="button">
-          − Columna
-        </button>
-      </div>
     </section>
   );
 }
