@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/interseguro/challenge/go-api/nodeclient"
 	"github.com/interseguro/challenge/go-api/qr"
 )
 
@@ -22,33 +23,47 @@ func main() {
 		return c.JSON(fiber.Map{"status": "active"})
 	})
 	app.Get("/health/dependencies", dependenciesHealthHandler(httpClient))
-	app.Post("/qr", qrHandler)
+	app.Post("/qr", qrHandler(nodeclient.New(os.Getenv("NODE_API_URL"), nil)))
 
 	app.Listen(":3001")
 }
 
-func qrHandler(c *fiber.Ctx) error {
-	var request struct {
-		Matrix *[][]float64 `json:"matrix"`
-	}
-
-	if err := c.BodyParser(&request); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "request body must be valid JSON"})
-	}
-	if request.Matrix == nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "matrix is required"})
-	}
-
-	q, r, err := qr.Factorize(*request.Matrix)
-	if err != nil {
-		status := fiber.StatusBadRequest
-		if errors.Is(err, qr.ErrDependentColumns) {
-			status = fiber.StatusUnprocessableEntity
+func qrHandler(client nodeclient.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var request struct {
+			Matrix *[][]float64 `json:"matrix"`
 		}
-		return c.Status(status).JSON(fiber.Map{"error": err.Error()})
-	}
 
-	return c.JSON(fiber.Map{"q": q, "r": r})
+		if err := c.BodyParser(&request); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "request body must be valid JSON"})
+		}
+		if request.Matrix == nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "matrix is required"})
+		}
+
+		q, r, err := qr.Factorize(*request.Matrix)
+		if err != nil {
+			status := fiber.StatusBadRequest
+			if errors.Is(err, qr.ErrDependentColumns) {
+				status = fiber.StatusUnprocessableEntity
+			}
+			return c.Status(status).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), nodeclient.RequestTimeout)
+		defer cancel()
+
+		statistics, err := client.Statistics(ctx, q, r)
+		if err != nil {
+			status := fiber.StatusServiceUnavailable
+			if errors.Is(err, nodeclient.ErrUnexpectedStatus) || errors.Is(err, nodeclient.ErrInvalidResponse) {
+				status = fiber.StatusBadGateway
+			}
+			return c.Status(status).JSON(fiber.Map{"error": "statistics service is unavailable"})
+		}
+
+		return c.JSON(fiber.Map{"q": q, "r": r, "statistics": statistics})
+	}
 }
 
 func dependenciesHealthHandler(client *http.Client) fiber.Handler {
