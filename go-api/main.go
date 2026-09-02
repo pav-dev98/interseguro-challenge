@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/interseguro/challenge/go-api/nodeclient"
 	"github.com/interseguro/challenge/go-api/qr"
 )
@@ -18,6 +19,15 @@ const dependencyRequestTimeout = 3 * time.Second
 func main() {
 	app := fiber.New()
 	httpClient := &http.Client{Timeout: dependencyRequestTimeout}
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: frontendURL,
+		AllowMethods: "GET,POST,OPTIONS",
+		AllowHeaders: "Origin,Content-Type,Accept",
+	}))
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "active"})

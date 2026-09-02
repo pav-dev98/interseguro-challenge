@@ -5,6 +5,7 @@ services:
     ports:
       - "3001:3001"
     environment:
+      FRONTEND_URL: http://localhost:3000
       NODE_API_URL: http://node-api:3002
     networks:
       - interseguro
