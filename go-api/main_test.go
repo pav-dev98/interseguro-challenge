@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -98,5 +99,37 @@ func TestDependenciesHealthTimesOut(t *testing.T) {
 
 	if response.StatusCode != http.StatusServiceUnavailable {
 		t.Fatalf("expected status 503, got %d", response.StatusCode)
+	}
+}
+
+func TestQREndpoint(t *testing.T) {
+	app := fiber.New()
+	app.Post("/qr", qrHandler)
+
+	tests := []struct {
+		name       string
+		body       string
+		wantStatus int
+	}{
+		{name: "valid matrix", body: `{"matrix":[[1,1],[1,0]]}`, wantStatus: http.StatusOK},
+		{name: "invalid JSON", body: `{"matrix":`, wantStatus: http.StatusBadRequest},
+		{name: "invalid matrix", body: `{"matrix":[[1,2],[3]]}`, wantStatus: http.StatusBadRequest},
+		{name: "dependent columns", body: `{"matrix":[[1,2],[2,4]]}`, wantStatus: http.StatusUnprocessableEntity},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodPost, "/qr", bytes.NewBufferString(test.body))
+			request.Header.Set("Content-Type", "application/json")
+			response, err := app.Test(request)
+			if err != nil {
+				t.Fatalf("unexpected request error: %v", err)
+			}
+			defer response.Body.Close()
+
+			if response.StatusCode != test.wantStatus {
+				t.Fatalf("expected status %d, got %d", test.wantStatus, response.StatusCode)
+			}
+		})
 	}
 }

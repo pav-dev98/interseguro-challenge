@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/interseguro/challenge/go-api/qr"
 )
 
 const dependencyRequestTimeout = 3 * time.Second
@@ -20,8 +22,33 @@ func main() {
 		return c.JSON(fiber.Map{"status": "active"})
 	})
 	app.Get("/health/dependencies", dependenciesHealthHandler(httpClient))
+	app.Post("/qr", qrHandler)
 
 	app.Listen(":3001")
+}
+
+func qrHandler(c *fiber.Ctx) error {
+	var request struct {
+		Matrix *[][]float64 `json:"matrix"`
+	}
+
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "request body must be valid JSON"})
+	}
+	if request.Matrix == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "matrix is required"})
+	}
+
+	q, r, err := qr.Factorize(*request.Matrix)
+	if err != nil {
+		status := fiber.StatusBadRequest
+		if errors.Is(err, qr.ErrDependentColumns) {
+			status = fiber.StatusUnprocessableEntity
+		}
+		return c.Status(status).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"q": q, "r": r})
 }
 
 func dependenciesHealthHandler(client *http.Client) fiber.Handler {
