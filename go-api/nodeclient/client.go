@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const RequestTimeout = 3 * time.Second
+const RequestTimeout = 30 * time.Second
 
 var (
 	ErrNotConfigured    = errors.New("NODE_API_URL is not configured")

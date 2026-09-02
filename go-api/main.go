@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -14,7 +13,7 @@ import (
 	"github.com/interseguro/challenge/go-api/qr"
 )
 
-const dependencyRequestTimeout = 3 * time.Second
+const dependencyRequestTimeout = nodeclient.RequestTimeout
 
 func main() {
 	app := fiber.New()
