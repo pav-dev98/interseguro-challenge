@@ -25,7 +25,11 @@ func main() {
 	app.Get("/health/dependencies", dependenciesHealthHandler(httpClient))
 	app.Post("/qr", qrHandler(nodeclient.New(os.Getenv("NODE_API_URL"), nil)))
 
-	app.Listen(":3001")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3001"
+	}
+	app.Listen(":" + port)
 }
 
 func qrHandler(client nodeclient.Client) fiber.Handler {
